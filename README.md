@@ -28,4 +28,4 @@ swift test
 ## How it works
 
 The sensor is a HID device (vendor `0x05AC`, product `0x8104`, usage page `0x20`, usage `0x8A`).
-The app reads feature report 1 at 30 Hz. Bytes 1-2 are the angle in degrees (little-endian `UInt16`).
+The app reads feature report 1 at 120 Hz on a background queue. Bytes 1-2 are the angle in degrees (little-endian `UInt16`).

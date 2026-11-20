@@ -14,20 +14,19 @@ final class LidAngleModel {
     var angle: Double? { lock.displayed(live: liveAngle) }
     var isLocked: Bool { lock.isLocked }
 
-    private let sensor: LidAngleSensor?
-    private var timer: Timer?
+    private let poller: SensorPoller?
 
-    init(pollInterval: TimeInterval = 1.0 / 30.0) {
+    /// 120 Hz: one reading per frame on a ProMotion display.
+    init(pollInterval: TimeInterval = 1.0 / 120.0) {
         do {
-            sensor = try LidAngleSensor()
+            poller = SensorPoller(sensor: try LidAngleSensor())
         } catch {
-            sensor = nil
+            poller = nil
             errorMessage = String(describing: error)
             return
         }
-        refresh()
-        timer = Timer.scheduledTimer(withTimeInterval: pollInterval, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.refresh() }
+        poller?.start(interval: pollInterval) { [weak self] value in
+            self?.update(value)
         }
     }
 
@@ -53,10 +52,10 @@ final class LidAngleModel {
         }
     }
 
-    private func refresh() {
-        guard let sensor else { return }
-        if let value = sensor.readAngle() {
-            if value != liveAngle { liveAngle = value }
+    /// Called by the poller when the reading changes.
+    private func update(_ value: Double?) {
+        if let value {
+            liveAngle = value
             errorMessage = nil
         } else if liveAngle == nil {
             errorMessage = "Cannot read the lid angle sensor."

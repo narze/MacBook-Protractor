@@ -132,7 +132,6 @@ struct LaptopSideView: View {
                                     y: hinge.y - lidLength * sin(radians)))
             context.stroke(lid, with: .color(.accentColor), style: bar)
         }
-        .animation(.snappy, value: angle)
         .accessibilityLabel("Laptop lid at \(Int(angle.rounded())) degrees")
     }
 }

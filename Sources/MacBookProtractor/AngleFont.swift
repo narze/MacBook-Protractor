@@ -22,8 +22,27 @@ struct AngleFont {
         nsFont = NSFont(descriptor: descriptor, size: size) ?? base
     }
 
+    private struct CacheKey: Hashable {
+        let text: String
+        let width: CGFloat
+        let height: CGFloat
+    }
+
+    @MainActor private static var cache: [CacheKey: AngleFont] = [:]
+
     /// Largest font whose cap height and width fit the given box.
+    /// Cached, because the view asks again on every angle change.
+    @MainActor
     static func fitting(_ text: String, in box: CGSize) -> AngleFont {
+        let key = CacheKey(text: text, width: box.width, height: box.height)
+        if let font = cache[key] { return font }
+        if cache.count > 64 { cache.removeAll() }   // live resize makes many sizes
+        let font = measureFitting(text, in: box)
+        cache[key] = font
+        return font
+    }
+
+    private static func measureFitting(_ text: String, in box: CGSize) -> AngleFont {
         let reference = AngleFont(size: 100)
         let byWidth = box.width / reference.width(of: text) * 100
         let byHeight = box.height / reference.nsFont.capHeight * 100
