@@ -12,7 +12,8 @@ struct ContentView: View {
             let size = turned
                 ? CGSize(width: geometry.size.height, height: geometry.size.width)
                 : geometry.size
-            AngleReadout(angle: model.angle)
+            // On a side edge the width is the short screen side: use almost all of it.
+            AngleReadout(angle: model.angle, widthFill: turned ? 0.98 : 0.9)
                 .frame(width: size.width, height: size.height)
                 .overlay(alignment: .bottom) {
                     statusLine
@@ -60,6 +61,8 @@ struct ContentView: View {
 /// The large number with the laptop drawing in the free space under the degree symbol.
 struct AngleReadout: View {
     let angle: Double?
+    /// Part of the width the number may use.
+    var widthFill: CGFloat = 0.9
 
     var body: some View {
         GeometryReader { geometry in
@@ -68,7 +71,7 @@ struct AngleReadout: View {
             // Size the font from the widest value, so it does not jump between 99 and 100.
             let font = AngleFont.fitting(
                 "888" + AngleFont.degree,
-                in: CGSize(width: geometry.size.width * 0.9, height: geometry.size.height * 0.72)
+                in: CGSize(width: geometry.size.width * widthFill, height: geometry.size.height * 0.72)
             )
             let degree = font.degreeBounds
             let gap = font.nsFont.capHeight * 0.08
