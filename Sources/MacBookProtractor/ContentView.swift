@@ -72,8 +72,6 @@ struct AngleReadout: View {
                 Text(text)
                     .font(font.font)
                     .foregroundStyle(angle == nil ? .gray : .white)
-                    .contentTransition(.numericText(value: angle ?? 0))
-                    .animation(.snappy, value: angle)
                     .fixedSize()
 
                 LaptopSideView(angle: angle ?? 0)

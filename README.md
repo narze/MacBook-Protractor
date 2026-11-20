@@ -21,7 +21,7 @@ swift test
 
 ## Controls
 
-- **Space** - lock the angle, press again to unlock
+- **Space** - tap to lock, tap again to unlock; hold to lock only while held (with a sound on lock and unlock)
 - **Double-click** or **Ctrl-Cmd-F** - toggle full screen
 - **Menu bar item** - lock, full screen, quit
 
