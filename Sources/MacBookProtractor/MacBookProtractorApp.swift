@@ -3,7 +3,7 @@ import LidAngleCore
 import SwiftUI
 
 @main
-struct LidAngleApp: App {
+struct MacBookProtractorApp: App {
     @State private var model = LidAngleModel()
 
     init() {
@@ -28,7 +28,7 @@ struct LidAngleApp: App {
     }
 
     var body: some Scene {
-        Window("Lid Angle", id: "main") {
+        Window("MacBook Protractor", id: "main") {
             ContentView(model: model)
         }
         .windowResizability(.contentSize)

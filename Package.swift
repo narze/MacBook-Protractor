@@ -2,10 +2,10 @@
 import PackageDescription
 
 let package = Package(
-    name: "LidAngle",
+    name: "MacBookProtractor",
     platforms: [.macOS(.v14)],
     products: [
-        .executable(name: "LidAngleApp", targets: ["LidAngleApp"]),
+        .executable(name: "MacBookProtractor", targets: ["MacBookProtractor"]),
     ],
     targets: [
         .target(
@@ -13,7 +13,7 @@ let package = Package(
             linkerSettings: [.linkedFramework("IOKit")]
         ),
         .executableTarget(
-            name: "LidAngleApp",
+            name: "MacBookProtractor",
             dependencies: ["LidAngleCore"]
         ),
         .testTarget(
