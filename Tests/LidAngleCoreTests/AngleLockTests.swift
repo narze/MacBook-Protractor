@@ -50,3 +50,68 @@ struct RightAngleTests {
         #expect(!LidAngle.isRightAngle(degrees))
     }
 }
+
+@Suite("AngleLock press and release")
+struct AngleLockHoldTests {
+    @Test("Tap locks and stays locked after release")
+    func tapLocks() {
+        var lock = AngleLock()
+        #expect(lock.press(current: 100, at: 0) == .locked)
+        #expect(lock.release(at: 0.1) == nil)
+        #expect(lock.isLocked)
+        #expect(lock.lockedAngle == 100)
+    }
+
+    @Test("Second tap unlocks on press")
+    func secondTapUnlocks() {
+        var lock = AngleLock()
+        lock.press(current: 100, at: 0)
+        lock.release(at: 0.1)
+        #expect(lock.press(current: 120, at: 1) == .unlocked)
+        #expect(!lock.isLocked)
+        #expect(lock.release(at: 1.1) == nil)
+        #expect(!lock.isLocked)
+    }
+
+    @Test("Long hold locks while held and unlocks on release")
+    func holdUnlocksOnRelease() {
+        var lock = AngleLock()
+        #expect(lock.press(current: 100, at: 0) == .locked)
+        #expect(lock.isLocked)
+        #expect(lock.release(at: AngleLock.holdThreshold) == .unlocked)
+        #expect(!lock.isLocked)
+    }
+
+    @Test("Press without a reading does nothing")
+    func pressWithoutReading() {
+        var lock = AngleLock()
+        #expect(lock.press(current: nil, at: 0) == nil)
+        #expect(lock.release(at: 1) == nil)
+        #expect(!lock.isLocked)
+    }
+
+    @Test("Release without a press does nothing")
+    func releaseWithoutPress() {
+        var lock = AngleLock()
+        #expect(lock.release(at: 1) == nil)
+        #expect(!lock.isLocked)
+    }
+
+    @Test("Toggle reports the change")
+    func toggleReportsChange() {
+        var lock = AngleLock()
+        #expect(lock.toggle(current: 90) == .locked)
+        #expect(lock.toggle(current: 90) == .unlocked)
+        #expect(lock.toggle(current: nil) == nil)
+    }
+
+    @Test("Toggle during a hold cancels the hold")
+    func toggleCancelsHold() {
+        var lock = AngleLock()
+        lock.press(current: 100, at: 0)
+        lock.toggle(current: 100)   // unlock from the menu
+        lock.toggle(current: 110)   // lock again from the menu
+        #expect(lock.release(at: 5) == nil)
+        #expect(lock.lockedAngle == 110)
+    }
+}
