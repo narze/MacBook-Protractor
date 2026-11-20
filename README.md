@@ -1,36 +1,31 @@
 # MacBook Protractor
 
-A small SwiftUI app that shows the MacBook lid angle from the built-in hinge sensor,
-as a large number on a black screen.
+Shows the MacBook lid angle from the built-in hinge sensor, as a large number on a black screen.
 
-The sensor is a HID device: Apple vendor `0x05AC`, product `0x8104`,
-usage page `0x20` (Sensor), usage `0x8A` (Orientation). The app reads
-feature report 1. Bytes 1-2 are the angle in degrees (little-endian `UInt16`).
+![MacBook Protractor](docs/screenshot.png)
 
-Newer MacBooks (2019 MacBook Pro 16" and later, Apple silicon) have this sensor.
-Some models (for example M1 MacBook Air / Pro) do not expose it.
+| Right angle | Locked |
+| --- | --- |
+| ![90 degrees with right-angle marker](docs/screenshot-right-angle.png) | ![Locked at 135 degrees](docs/screenshot-locked.png) |
 
 ## Run
+
+Needs macOS 14+ and a MacBook with a lid angle sensor (2019 MacBook Pro 16" and later; some M1 models do not have one).
 
 ```sh
 swift run MacBookProtractor               # window + menu bar item
 swift run MacBookProtractor --fullscreen  # start in full screen
 swift run MacBookProtractor --once        # print the angle and exit
-swift test                                # unit tests
+swift test
 ```
 
 ## Controls
 
-| Action | Result |
-| --- | --- |
-| Space | Lock the shown angle. Press again to unlock. |
-| Double-click, Ctrl-Cmd-F | Toggle full screen |
-| Menu bar item | Lock / unlock, full screen, quit |
+- **Space** - lock the angle, press again to unlock
+- **Double-click** or **Ctrl-Cmd-F** - toggle full screen
+- **Menu bar item** - lock, full screen, quit
 
-At 90 degrees the angle marker under the degree symbol changes from an arc to a right-angle square.
+## How it works
 
-## Layout
-
-- `Sources/LidAngleCore` - `LidAngleReport` (report parser), `LidAngleSensor` (IOKit HID reader), `AngleLock` and `LidAngle.isRightAngle`
-- `Sources/MacBookProtractor` - SwiftUI window, menu bar item, 30 Hz polling
-- `Tests/LidAngleCoreTests` - Swift Testing tests for the core logic
+The sensor is a HID device (vendor `0x05AC`, product `0x8104`, usage page `0x20`, usage `0x8A`).
+The app reads feature report 1 at 30 Hz. Bytes 1-2 are the angle in degrees (little-endian `UInt16`).
