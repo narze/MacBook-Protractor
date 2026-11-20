@@ -25,8 +25,13 @@ struct ContentView: View {
         .focusEffectDisabled()
         .focused($focused)
         .onAppear { focused = true }
-        .onKeyPress(.space) {
-            model.toggleLock()
+        // Tap: lock / unlock. Long hold: locked only while held.
+        .onKeyPress(.space, phases: [.down, .repeat, .up]) { press in
+            switch press.phase {
+            case .down: model.pressLock()
+            case .up: model.releaseLock()
+            default: break   // ignore key repeat
+            }
             return .handled
         }
     }

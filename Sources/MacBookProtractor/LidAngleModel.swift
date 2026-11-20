@@ -32,7 +32,25 @@ final class LidAngleModel {
     }
 
     func toggleLock() {
-        lock.toggle(current: liveAngle)
+        play(lock.toggle(current: liveAngle))
+    }
+
+    /// Space key down.
+    func pressLock() {
+        play(lock.press(current: liveAngle, at: ProcessInfo.processInfo.systemUptime))
+    }
+
+    /// Space key up.
+    func releaseLock() {
+        play(lock.release(at: ProcessInfo.processInfo.systemUptime))
+    }
+
+    private func play(_ change: AngleLock.Change?) {
+        switch change {
+        case .locked: LockSound.locked.play()
+        case .unlocked: LockSound.unlocked.play()
+        case nil: break
+        }
     }
 
     private func refresh() {
