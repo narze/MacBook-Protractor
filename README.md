@@ -8,7 +8,12 @@ Shows the MacBook lid angle from the built-in hinge sensor, as a large number on
 | --- | --- |
 | ![90 degrees with right-angle marker](docs/screenshot-right-angle.png) | ![Locked at 135 degrees](docs/screenshot-locked.png) |
 
-## Run
+## Install
+
+Download the `.dmg` from [Releases](https://github.com/narze/MacBook-Protractor/releases), open it and drag the app to Applications.
+The app is not notarized: the first time, right-click the app and select **Open**.
+
+## Run from source
 
 Needs macOS 14+ and a MacBook with a lid angle sensor (2019 MacBook Pro 16" and later; some M1 models do not have one).
 
@@ -25,6 +30,8 @@ To build `build/MacBook Protractor.app` (universal, ad-hoc signed):
 scripts/bundle.sh
 open "build/MacBook Protractor.app"
 ```
+
+`scripts/dmg.sh` builds `build/MacBook-Protractor-<version>.dmg` with the app.
 
 ## Controls
 

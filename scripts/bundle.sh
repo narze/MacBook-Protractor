@@ -8,7 +8,7 @@ cd "$(dirname "$0")/.."
 NAME="MacBook Protractor"
 EXECUTABLE="MacBookProtractor"
 BUNDLE_ID="com.narze.MacBookProtractor"
-VERSION="${VERSION:-$(git describe --tags --always 2>/dev/null || echo 0)}"
+VERSION="${VERSION:-$(git describe --tags --always 2>/dev/null | sed 's/^v//' || echo 0)}"
 APP="build/$NAME.app"
 
 swift build -c release --arch arm64 --arch x86_64
