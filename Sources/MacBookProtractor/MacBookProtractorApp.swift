@@ -30,11 +30,27 @@ struct MacBookProtractorApp: App {
     var body: some Scene {
         Window("MacBook Protractor", id: "main") {
             ContentView(model: model)
+                .preferredColorScheme(.dark)
+                .onAppear {
+                    // `--fullscreen`: start in full screen mode.
+                    if CommandLine.arguments.contains("--fullscreen") {
+                        DispatchQueue.main.async { FullScreen.enter() }
+                    }
+                }
         }
-        .windowResizability(.contentSize)
+        .windowStyle(.hiddenTitleBar)
+        .defaultSize(width: 480, height: 360)
+        .commands {
+            CommandGroup(after: .sidebar) {
+                Button("Toggle Full Screen") { FullScreen.toggle() }
+                    .keyboardShortcut("f", modifiers: [.command, .control])
+            }
+        }
 
         MenuBarExtra {
-            Button("Quit") { NSApplication.shared.terminate(nil) }
+            Button("Toggle Full Screen") { FullScreen.toggle() }
+            Divider()
+            Button("Quit MacBook Protractor") { NSApplication.shared.terminate(nil) }
                 .keyboardShortcut("q")
         } label: {
             Text(model.angle.map { "\(Int($0.rounded()))°" } ?? "--°")
