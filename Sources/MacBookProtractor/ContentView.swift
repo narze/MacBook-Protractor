@@ -7,7 +7,11 @@ struct ContentView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            let size = geometry.size
+            // Standing on a side edge: lay out in the swapped size, then turn upright.
+            let turned = model.rotation != .upright
+            let size = turned
+                ? CGSize(width: geometry.size.height, height: geometry.size.width)
+                : geometry.size
             AngleReadout(angle: model.angle)
                 .frame(width: size.width, height: size.height)
                 .overlay(alignment: .bottom) {
@@ -15,6 +19,9 @@ struct ContentView: View {
                         .font(.system(size: max(13, size.height * 0.035), weight: .semibold, design: .rounded))
                         .padding(.bottom, size.height * 0.04)
                 }
+                .rotationEffect(.degrees(model.rotation.degrees))
+                .frame(width: geometry.size.width, height: geometry.size.height)
+                .animation(.easeInOut(duration: 0.35), value: model.rotation)
         }
         .frame(minWidth: 320, idealWidth: 480, minHeight: 240, idealHeight: 360)
         .background(.black)

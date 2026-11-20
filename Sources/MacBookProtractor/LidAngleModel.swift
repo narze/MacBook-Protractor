@@ -1,4 +1,4 @@
-import Foundation
+import AppKit
 import LidAngleCore
 import Observation
 
@@ -14,19 +14,38 @@ final class LidAngleModel {
     var angle: Double? { lock.displayed(live: liveAngle) }
     var isLocked: Bool { lock.isLocked }
 
+    /// How to rotate the UI when the Mac stands on a side edge.
+    private(set) var rotation: ScreenRotation = .upright
+
     private let poller: SensorPoller?
+    private let accelerometer: AccelerometerSensor?
+    // Updated about 100 times per second: not observed, only `rotation` is.
+    @ObservationIgnored private var orientation = OrientationDetector()
 
     /// 120 Hz: one reading per frame on a ProMotion display.
     init(pollInterval: TimeInterval = 1.0 / 120.0) {
+        accelerometer = try? AccelerometerSensor()
         do {
             poller = SensorPoller(sensor: try LidAngleSensor())
         } catch {
             poller = nil
             errorMessage = String(describing: error)
-            return
         }
         poller?.start(interval: pollInterval) { [weak self] value in
             self?.update(value)
+        }
+        startAccelerometer()
+    }
+
+    private func startAccelerometer() {
+        accelerometer?.start { [weak self] gravity in
+            self?.updateOrientation(gravityX: gravity.x)
+        }
+        // Turn the accelerometer off again when the app quits.
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.willTerminateNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.accelerometer?.stop() }
         }
     }
 
@@ -49,6 +68,12 @@ final class LidAngleModel {
         case .locked: LockSound.locked.play()
         case .unlocked: LockSound.unlocked.play()
         case nil: break
+        }
+    }
+
+    private func updateOrientation(gravityX: Double) {
+        if let change = orientation.update(gravityX: gravityX) {
+            rotation = change
         }
     }
 
