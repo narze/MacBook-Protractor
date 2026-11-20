@@ -19,6 +19,13 @@ swift run MacBookProtractor --once        # print the angle and exit
 swift test
 ```
 
+To build `build/MacBook Protractor.app` (universal, ad-hoc signed):
+
+```sh
+scripts/bundle.sh
+open "build/MacBook Protractor.app"
+```
+
 ## Controls
 
 - **Space** - tap to lock, tap again to unlock; hold to lock only while held (with a sound on lock and unlock)
