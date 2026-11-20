@@ -8,6 +8,10 @@ Shows the MacBook lid angle from the built-in hinge sensor, as a large number on
 | --- | --- |
 | ![90 degrees with right-angle marker](docs/screenshot-right-angle.png) | ![Locked at 135 degrees](docs/screenshot-locked.png) |
 
+Stand the Mac on a side edge like a book, and the UI turns to stay upright:
+
+<img src="docs/photo-on-side.jpg" alt="MacBook standing on its side edge, showing 67 degrees upright" width="360">
+
 ## Install
 
 Download the `.dmg` from [Releases](https://github.com/narze/MacBook-Protractor/releases), open it and drag the app to Applications.
