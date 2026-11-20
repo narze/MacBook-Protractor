@@ -1,49 +1,88 @@
+import LidAngleCore
 import SwiftUI
 
 struct ContentView: View {
     let model: LidAngleModel
+    @FocusState private var focused: Bool
 
     var body: some View {
         GeometryReader { geometry in
-            let padding = geometry.size.height * 0.06
-            let drawingHeight = geometry.size.height * 0.2
-            let numberHeight = max(10, geometry.size.height - drawingHeight - padding * 2)
-
-            VStack(spacing: 0) {
-                LaptopSideView(angle: model.angle ?? 0)
-                    .frame(width: drawingHeight * 1.5, height: drawingHeight)
-                    .opacity(model.angle == nil ? 0.3 : 1)
-
-                angleText(fontSize: numberHeight)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                if model.angle == nil {
-                    Text(model.errorMessage ?? "Reading sensor...")
-                        .font(.title3)
-                        .foregroundStyle(.red)
-                        .multilineTextAlignment(.center)
+            let size = geometry.size
+            AngleReadout(angle: model.angle)
+                .frame(width: size.width, height: size.height)
+                .overlay(alignment: .bottom) {
+                    statusLine
+                        .font(.system(size: max(13, size.height * 0.035), weight: .semibold, design: .rounded))
+                        .padding(.bottom, size.height * 0.04)
                 }
-            }
-            .padding(padding)
-            .frame(width: geometry.size.width, height: geometry.size.height)
         }
         .frame(minWidth: 320, idealWidth: 480, minHeight: 240, idealHeight: 360)
         .background(.black)
         .ignoresSafeArea()
         .contentShape(Rectangle())
         .onTapGesture(count: 2) { FullScreen.toggle() }
+        .focusable()
+        .focusEffectDisabled()
+        .focused($focused)
+        .onAppear { focused = true }
+        .onKeyPress(.space) {
+            model.toggleLock()
+            return .handled
+        }
     }
 
-    private func angleText(fontSize: CGFloat) -> some View {
-        Text(model.angle.map { "\(Int($0.rounded()))°" } ?? "--°")
-            // As tall as the free space, then shrink if it is too wide.
-            .font(.system(size: fontSize, weight: .semibold, design: .rounded))
-            .monospacedDigit()
-            .minimumScaleFactor(0.01)
-            .lineLimit(1)
-            .foregroundStyle(model.angle == nil ? .gray : .white)
-            .contentTransition(.numericText(value: model.angle ?? 0))
-            .animation(.snappy, value: model.angle)
+    @ViewBuilder
+    private var statusLine: some View {
+        if model.isLocked {
+            Label("Locked", systemImage: "lock.fill")
+                .foregroundStyle(.yellow)
+        } else if model.angle == nil {
+            Text(model.errorMessage ?? "Reading sensor...")
+                .foregroundStyle(.red)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+        }
+    }
+}
+
+/// The large number with the laptop drawing in the free space under the degree symbol.
+struct AngleReadout: View {
+    let angle: Double?
+
+    var body: some View {
+        GeometryReader { geometry in
+            let digits = angle.map { String(Int($0.rounded())) } ?? "--"
+            let text = digits + AngleFont.degree
+            // Size the font from the widest value, so it does not jump between 99 and 100.
+            let font = AngleFont.fitting(
+                "888" + AngleFont.degree,
+                in: CGSize(width: geometry.size.width * 0.9, height: geometry.size.height * 0.72)
+            )
+            let degree = font.degreeBounds
+            let gap = font.nsFont.capHeight * 0.08
+            let drawingSize = CGSize(width: degree.width * 1.2, height: max(0, degree.minY - gap))
+            let degreeShift = font.degreeAdvance - degree.midX
+
+            ZStack(alignment: Alignment(horizontal: .trailing, vertical: .lastTextBaseline)) {
+                Text(text)
+                    .font(font.font)
+                    .foregroundStyle(angle == nil ? .gray : .white)
+                    .contentTransition(.numericText(value: angle ?? 0))
+                    .animation(.snappy, value: angle)
+                    .fixedSize()
+
+                LaptopSideView(angle: angle ?? 0)
+                    .frame(width: drawingSize.width, height: drawingSize.height)
+                    .opacity(angle == nil ? 0.3 : 1)
+                    // Bottom on the baseline, centered under the degree glyph ink.
+                    .alignmentGuide(.lastTextBaseline) { $0[.bottom] }
+                    .alignmentGuide(.trailing) {
+                        $0[HorizontalAlignment.center] + degreeShift
+                    }
+            }
+            .offset(y: font.capCenteringOffset)
+            .frame(width: geometry.size.width, height: geometry.size.height)
+        }
     }
 }
 
@@ -53,11 +92,15 @@ struct LaptopSideView: View {
 
     var body: some View {
         Canvas { context, size in
-            let thickness = max(4, size.height * 0.05)
-            let baseLength = size.width * 0.55
-            let lidLength = baseLength * 0.95
-            let hinge = CGPoint(x: size.width * 0.38, y: size.height - thickness)
+            let thickness = max(3, size.width * 0.06)
+            // Hinge in the middle: the lid stays inside the frame from 0 to 180 degrees.
+            let baseLength = max(0, min(size.width / 2 - thickness / 2, size.height - thickness))
+            let lidLength = baseLength
+            let hinge = CGPoint(x: size.width / 2, y: size.height - thickness / 2)
             let bar = StrokeStyle(lineWidth: thickness, lineCap: .round)
+            let marker = StrokeStyle(lineWidth: thickness * 0.4, lineCap: .round, lineJoin: .round)
+            let markerColor = GraphicsContext.Shading.color(.accentColor.opacity(0.6))
+            let markerSize = lidLength * 0.32
 
             // Base: extends right from the hinge.
             var base = Path()
@@ -65,12 +108,18 @@ struct LaptopSideView: View {
             base.addLine(to: CGPoint(x: hinge.x + baseLength, y: hinge.y))
             context.stroke(base, with: .color(.gray), style: bar)
 
-            // Arc that shows the angle.
-            var arc = Path()
-            arc.addArc(center: hinge, radius: lidLength * 0.25, startAngle: .degrees(0),
-                       endAngle: .degrees(-angle), clockwise: true)
-            context.stroke(arc, with: .color(.accentColor.opacity(0.6)),
-                           style: StrokeStyle(lineWidth: thickness * 0.4, lineCap: .round))
+            // Angle marker: a square at 90 degrees, else an arc.
+            var mark = Path()
+            if LidAngle.isRightAngle(angle) {
+                let side = markerSize * 0.8
+                mark.move(to: CGPoint(x: hinge.x + side, y: hinge.y))
+                mark.addLine(to: CGPoint(x: hinge.x + side, y: hinge.y - side))
+                mark.addLine(to: CGPoint(x: hinge.x, y: hinge.y - side))
+            } else {
+                mark.addArc(center: hinge, radius: markerSize, startAngle: .degrees(0),
+                            endAngle: .degrees(-angle), clockwise: true)
+            }
+            context.stroke(mark, with: markerColor, style: marker)
 
             // Lid: lies on the base at 0 deg and opens counter-clockwise around the hinge.
             let radians = angle * .pi / 180

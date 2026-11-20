@@ -48,12 +48,14 @@ struct MacBookProtractorApp: App {
         }
 
         MenuBarExtra {
+            Button(model.isLocked ? "Unlock Angle" : "Lock Angle") { model.toggleLock() }
             Button("Toggle Full Screen") { FullScreen.toggle() }
             Divider()
             Button("Quit MacBook Protractor") { NSApplication.shared.terminate(nil) }
                 .keyboardShortcut("q")
         } label: {
-            Text(model.angle.map { "\(Int($0.rounded()))°" } ?? "--°")
+            let value = model.angle.map { "\(Int($0.rounded()))°" } ?? "--°"
+            Text(model.isLocked ? "\(Image(systemName: "lock.fill")) \(value)" : "\(value)")
                 .monospacedDigit()
         }
     }
