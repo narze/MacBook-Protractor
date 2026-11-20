@@ -36,7 +36,8 @@ open "build/MacBook Protractor.app"
 ## How it works
 
 The sensor is a HID device (vendor `0x05AC`, product `0x8104`, usage page `0x20`, usage `0x8A`).
-The app reads feature report 1 at 120 Hz on a background queue. Bytes 1-2 are the angle in degrees (little-endian `UInt16`).
+The app reads feature report 1 at 30 Hz on a background queue. Bytes 1-2 are the angle in degrees (little-endian `UInt16`).
+A 1 degree change shows only after it stays for 0.1 s, so sensor jitter does not flicker the number.
 
 Auto-rotate uses the built-in accelerometer (usage page `0xFF00`, usage `3`, Apple Silicon only).
 The app turns its SPU driver on at 100 Hz while it runs and off when it quits.
