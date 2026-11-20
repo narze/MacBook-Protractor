@@ -22,8 +22,9 @@ final class LidAngleModel {
     // Updated about 100 times per second: not observed, only `rotation` is.
     @ObservationIgnored private var orientation = OrientationDetector()
 
-    /// 120 Hz: one reading per frame on a ProMotion display.
-    init(pollInterval: TimeInterval = 1.0 / 120.0) {
+    /// 30 Hz: often enough for a moving lid, and the digit animation
+    /// smooths the steps between readings.
+    init(pollInterval: TimeInterval = 1.0 / 30.0) {
         accelerometer = try? AccelerometerSensor()
         do {
             poller = SensorPoller(sensor: try LidAngleSensor())

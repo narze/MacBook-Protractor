@@ -79,6 +79,8 @@ struct AngleReadout: View {
                 Text(text)
                     .font(font.font)
                     .foregroundStyle(angle == nil ? .gray : .white)
+                    // Digits roll up or down to the new value.
+                    .contentTransition(.numericText(value: angle ?? 0))
                     .fixedSize()
 
                 LaptopSideView(angle: angle ?? 0)
@@ -91,14 +93,21 @@ struct AngleReadout: View {
                     }
             }
             .offset(y: font.capCenteringOffset)
+            .animation(.snappy, value: angle)
             .frame(width: geometry.size.width, height: geometry.size.height)
         }
     }
 }
 
 /// Side view of a laptop: a fixed base and a lid that rotates around the hinge.
-struct LaptopSideView: View {
-    let angle: Double
+/// Animatable, so the lid sweeps smoothly to a new angle.
+struct LaptopSideView: View, Animatable {
+    var angle: Double
+
+    nonisolated var animatableData: Double {
+        get { angle }
+        set { angle = newValue }
+    }
 
     var body: some View {
         Canvas { context, size in
